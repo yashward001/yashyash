@@ -33,3 +33,8 @@ archive.zip
 # misc
 graph_output.json
 secrets.yml
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
