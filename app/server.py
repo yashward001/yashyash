@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 load_dotenv()
 
-os.environ["ANTHROPIC_API_KEY"] = "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"
+os.environ["ANTHROPIC_API_KEY"] = "."
 obb.account.login(pat=os.environ.get("OPENBB_TOKEN"), remember_me=True)
 obb.user.credentials.tiingo_token = os.environ.get("TIINGO_API_KEY")
 obb.user.credentials.fmp_api_key = os.environ.get("FMP_API_KEY")

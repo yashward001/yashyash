@@ -8,7 +8,7 @@ from openbb import obb
 from dotenv import load_dotenv
 
 import os
-os.environ["ANTHROPIC_API_KEY"] = "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"
+os.environ["ANTHROPIC_API_KEY"] = "."
 
 
 from chains.clear_results import with_clear_container
