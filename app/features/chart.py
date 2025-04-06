@@ -5,7 +5,7 @@ import tempfile
 from datetime import datetime, timedelta
 
 import pandas as pd
-import plotly.graph_objects as go
+import plotly.graph_objs as go
 import plotly.subplots as sp
 import pyimgur
 import seaborn as sns
@@ -27,15 +27,12 @@ def create_plotly_chart(df: pd.DataFrame, symbol: str) -> go.Figure:
     """
     Generate a Plotly chart for stock data visualization.
 
-    This function creates a Plotly chart for a given DataFrame and stock symbol.
-    It includes a candlestick chart with moving average overlays and subplots for RSI and ATR.
-
-    Parameters:
-    - df (pd.DataFrame): The DataFrame containing stock data with columns like 'open', 'high', 'low', 'close', 'SMA_50', 'SMA_200', 'RSI', 'ATR'.
-    - symbol (str): The stock symbol.
+    Args:
+    - df (pd.DataFrame): Stock data with columns like 'open', 'high', 'low', 'close', 'SMA_50', 'SMA_200', 'RSI', 'ATR'
+    - symbol (str): Stock symbol
 
     Returns:
-    - go.Figure: A Plotly figure object that can be used to display the chart.
+    - go.Figure: Plotly figure for the stock
     """
     fig = sp.make_subplots(
         rows=3,
@@ -129,12 +126,9 @@ def upload_image_to_imgur(buffer, symbol) -> str:
     """
     Uploads an image to Imgur.
 
-    This function takes a buffer containing an image, uploads it to Imgur, and returns the URL of the uploaded image.
-    It uses the Imgur API credentials defined in the environment variables.
-
     Args:
         buffer (io.BytesIO): The buffer containing the image data.
-        symbol (str): The stock symbol associated with the image, used for titling the image on Imgur.
+        symbol (str): The stock symbol associated with the image.
 
     Returns:
         str: The URL of the uploaded image on Imgur.
@@ -157,15 +151,12 @@ def plotly_fig_to_bytes(fig, filename="temp_plot.png"):
     """
     Convert a Plotly figure to a bytes object.
 
-    This function takes a Plotly figure, saves it as a PNG image, reads the image back into memory,
-    and then deletes the image file. It returns a bytes object of the image which can be used for further processing or uploading.
-
     Args:
-        fig (plotly.graph_objs._figure.Figure): The Plotly figure to convert.
-        filename (str): The filename to use when saving the image. Defaults to 'temp_plot.png'.
+        fig (plotly.graph_objs._figure.Figure): Plotly figure to convert
+        filename (str): Temporary filename for saving the plot
 
     Returns:
-        io.BytesIO: A bytes object containing the image data.
+        io.BytesIO: A bytes object containing the image data
     """
     fig.write_image(filename)
     with open(filename, "rb") as file:
@@ -176,14 +167,14 @@ def plotly_fig_to_bytes(fig, filename="temp_plot.png"):
 
 def get_chart_base64(symbol: str) -> dict:
     """
-    Generate a base64 encoded string of the chart image for a given stock symbol.
-    Returns the base64 string and the figure object.
+    Generate a chart representation for a given stock symbol.
+    Returns multiple representations to support different UI rendering methods.
 
     Args:
     symbol (str): The stock symbol to generate the chart for.
 
     Returns:
-    dict: A dictionary containing the base64 encoded string and the URL of the uploaded image on Imgur.
+    dict: A dictionary containing chart representations.
     """
     try:
         start = datetime.now() - timedelta(days=365 * 2)
@@ -200,9 +191,16 @@ def get_chart_base64(symbol: str) -> dict:
         chart_bytes = plotly_fig_to_bytes(chart_data)
         chart_url = upload_image_to_imgur(chart_bytes, symbol)
 
+        # Base64 encoded image for direct image rendering
         chart_base64 = base64.b64encode(chart_bytes.getvalue()).decode('utf-8')
-        return {"chart": chart_base64, "url": chart_url}
+        
+        # Plotly figure configuration for interactive rendering
+        plotly_config = chart_data.to_plotly_json()
+
+        return {
+            "chart": chart_base64,  # Image representation
+            "url": chart_url,
+            "plotly": plotly_config  # Interactive representation
+        }
     except Exception as e:
         return {"error": f"Failed to generate chart: {str(e)}"}
-
-

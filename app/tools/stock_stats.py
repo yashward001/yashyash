@@ -379,3 +379,4 @@ def get_institutional_holders(symbol: str) -> str:
         return wrap_dataframe(holders)
     except Exception as e:
         return f"\n<observation>\nError: {e}\n</observation>\n"
+    

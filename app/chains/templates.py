@@ -48,18 +48,6 @@ Don't ask the user for any input to do this. Use the criteria and the tools belo
 
 {CRITERIA_TEMPLATE}
 
-STEPS:
-------
-
-1. Get the latest price history for the requested stock.
-2. Get key metrics for the requested stock.
-3. Get ratios for the requested stock.
-4. Get sector info for the requested stock.
-5. Get valuation multiples for the requested stock.
-6. Get news sentiment for the requested stock.
-7. Get relative strength for the requested stock.
-8. Calculate fundamentals using QuantStats.
-
 {END_TEMPLATE}"""
 
 CHART_ANALYSIS_TEMPLATE = f"""

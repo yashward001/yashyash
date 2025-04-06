@@ -10,18 +10,19 @@ from dotenv import load_dotenv
 import os
 os.environ["ANTHROPIC_API_KEY"] = "."
 
-
 from chains.clear_results import with_clear_container
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app.chains.agent import create_anthropic_agent_graph
 
-import os
+import io
+import base64
+import uuid
 import warnings
 import inspect
-import uuid
 import pandas as pd
 import streamlit as st
+import plotly.graph_objs as go
 
 warnings.filterwarnings("ignore")
 
@@ -66,6 +67,69 @@ def get_streamlit_cb(parent_container: DeltaGenerator):
     return st_cb
 
 
+def render_visualization(content: str, answer_container):
+    """
+    Parse the response and render appropriate visualizations.
+    
+    Markers:
+    - [CHART: base64_encoded_image]
+    - [TABLE: pandas_dataframe]
+    - [PLOTLY: plotly_json_config]
+    """
+    # Check for chart markers
+    if "[CHART:" in content and "]" in content:
+        # Extract base64 encoded image
+        start = content.index("[CHART:") + 7
+        end = content.index("]", start)
+        base64_image = content[start:end]
+        
+        try:
+            # Decode and display image
+            image_bytes = base64.b64decode(base64_image)
+            answer_container.image(image_bytes, use_column_width=True)
+            
+            # Remove the chart marker from the content
+            content = content.replace(f"[CHART:{base64_image}]", "")
+        except Exception as e:
+            st.error(f"Error rendering chart: {e}")
+    
+    # Check for Plotly chart markers
+    if "[PLOTLY:" in content and "]" in content:
+        try:
+            start = content.index("[PLOTLY:") + 8
+            end = content.index("]", start)
+            plotly_config = content[start:end]
+            
+            # Parse the Plotly configuration
+            fig = go.Figure(eval(plotly_config))
+            answer_container.plotly_chart(fig, use_container_width=True)
+            
+            # Remove the Plotly marker from the content
+            content = content.replace(f"[PLOTLY:{plotly_config}]", "")
+        except Exception as e:
+            st.error(f"Error rendering Plotly chart: {e}")
+    
+    # Check for table markers
+    if "[TABLE:" in content and "]" in content:
+        try:
+            start = content.index("[TABLE:") + 7
+            end = content.index("]", start)
+            table_str = content[start:end]
+            
+            # Convert table string back to DataFrame
+            df = pd.read_json(table_str)
+            answer_container.dataframe(df, use_container_width=True)
+            
+            # Remove the table marker from the content
+            content = content.replace(f"[TABLE:{table_str}]", "")
+        except Exception as e:
+            st.error(f"Error rendering table: {e}")
+    
+    # Write the remaining content
+    if content.strip():
+        answer_container.write(content)
+
+
 if "graph" not in st.session_state:
     st.session_state.graph = create_anthropic_agent_graph()
 
@@ -105,5 +169,7 @@ if with_clear_container(submit_clicked):
     response = st.session_state.graph.invoke(question, cfg)
     answer = response["messages"][-1].content
 
+    # Use the new render_visualization function
+    render_visualization(answer, answer_container)
+
     st.session_state.messages.append({"role": "assistant", "content": answer})
-    answer_container.write(answer)

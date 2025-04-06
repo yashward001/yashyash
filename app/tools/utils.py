@@ -6,11 +6,27 @@ from langchain_core.messages import ToolMessage
 from langgraph.prebuilt.tool_node import ToolNode
 
 import pandas as pd
+import json
 
 
 def wrap_dataframe(df: pd.DataFrame) -> str:
-    df_string = df.to_markdown(index=False)
-    return f"\n<observation>\n{df_string}\n</observation>\n"
+    """
+    Wrap a DataFrame with a special marker for UI rendering.
+    
+    This allows the UI to parse and render the DataFrame as a table.
+    
+    Args:
+        df (pd.DataFrame): DataFrame to be wrapped
+    
+    Returns:
+        str: Wrapped DataFrame representation
+    """
+    try:
+        # Convert DataFrame to a JSON string for easy parsing
+        df_json = df.to_json()
+        return f"\n<observation>\n[TABLE:{df_json}]\n</observation>\n"
+    except Exception as e:
+        return f"\n<observation>Error converting DataFrame: {str(e)}\n</observation>\n"
 
 
 def fetch_stock_data(

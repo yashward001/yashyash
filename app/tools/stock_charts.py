@@ -9,10 +9,22 @@ from app.tools.types import StockStatsInput
 
 @tool(args_schema=StockStatsInput)
 def get_stock_chart_analysis(symbol: str) -> str:
-    """Using the chart data, generate a technical analysis summary."""
+    """Using the chart data, generate a technical analysis summary with visualizations."""
 
     try:
         chart_data = get_chart_base64(symbol)
+        
+        # Include multiple visualization representations
+        visualization_markers = ""
+        
+        # Image representation
+        if 'chart' in chart_data:
+            visualization_markers += f"[CHART:{chart_data['chart']}]"
+        
+        # Plotly representation
+        if 'plotly' in chart_data:
+            visualization_markers += f"[PLOTLY:{repr(chart_data['plotly'])}]"
+        
         llm = ChatAnthropic(model_name="claude-3-opus-20240229", max_tokens=4096)
         analysis = llm.invoke(
             [
@@ -32,6 +44,7 @@ def get_stock_chart_analysis(symbol: str) -> str:
                 )
             ]
         )
-        return f"\n<observation>\n{analysis}\n</observation>\n"
+        
+        return f"\n<observation>\n{visualization_markers}{analysis}\n</observation>\n"
     except Exception as e:
         return f"\n<observation>\nError: {e}\n</observation>\n"
